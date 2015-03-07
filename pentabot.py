@@ -24,7 +24,8 @@ config.read([configfile, configfile])
 # feed dict
 feed_help= {}
 feed_help['lastrss']= "\n".join(dict(config.items('RSS')).keys())
-
+feed_help['lastrssmensa']= "\n".join(dict(config.items('RSSMENSA')).keys())
+feed_help['lastrssgithub']= "\n".join(dict(config.items('RSSGITHUB')).keys())
 
 class pentaBot(JabberBot):
     """
@@ -32,6 +33,8 @@ class pentaBot(JabberBot):
     It shall server you at your fingertips. And you shall serve him. With News for pentaradio.
     For more info: http://github.com/koeart/pentabot
     koeart <at remove this> zwoelfelf <this as well> <net>
+    
+    Don't Abuse Me! Channel for Testing: bot@chat.c3d2.de
     """
 
     def __init__( self, jid, password, res = None, debug=False, command_prefix=''):
@@ -73,7 +76,7 @@ class pentaBot(JabberBot):
 if __name__ == "__main__":
     #start Server
     while True:
-        pentabot = pentaBot(secret.get('pentaBotSecret', 'username'), secret.get('pentaBotSecret', 'password'), secret.get('pentaBotSecret', 'resource'), bool(secret.get('pentaBotSecret', 'debug')), command_prefix='!')
+        pentabot = pentaBot(secret.get('pentaBotSecret', 'username'), secret.get('pentaBotSecret', 'password'), secret.get('pentaBotSecret', 'resource'), bool(secret.get('pentaBotSecret', 'debug')), command_prefix='+')
         lChan = config.get("muc", "chan").split(',')
         lNick = config.get("muc", "name").split(',')
         for _int in range(0, len(lChan)):
