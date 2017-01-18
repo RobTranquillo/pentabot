@@ -5,102 +5,194 @@ import feedparser
 import datetime
 import time
 import urllib
-import os
+import os, sys
 import json
 import requests
 import logging
 
 import socket
 import subprocess
-import os, sys
+import fcntl
+import errno
 
 from decorators import ignore_msg_from_self
 from pentabot import feed_help, config
 from gen_topic import get_topic
-from gen_kickreason import get_kickreason 
+from gen_kickreason import get_kickreason
 
 ### ### ###
 
-MPV_SOCKET = "/tmp/mpvsocket"
-CIDER = "cider.hq.c3d2.de"
 IS_PYTHON2 = sys.version_info < (3, 0)
+
 if IS_PYTHON2:
     QUIT_CMD = '{"command": ["quit"]}\n'
+    MEDIA_TITLE = '{"command": ["get_property_string", "media-title"]}\n'
 else:
     QUIT_CMD = b'{"command": ["quit"]}\n'
+    MEDIA_TITLE = b'{"command": ["get_property_string", "media-title"]}\n'
 
-def stop_playback():
-    os.popen('pkill mpv')
-    if os.path.exists(MPV_SOCKET):
+class Mpv:
+    def __init__(self, host):
+        self.host = host
+        self.socket_path = "/tmp/mpv-" + host
+        self.child = None
+    def play(self, uri):
+        self.stop()
+        cmd = ["mpv",
+                "--ao", "pulse:"+self.host,
+                "--no-config",
+                "--input-unix-socket="+self.socket_path,
+                "--", uri]
+        self.child = subprocess.Popen(cmd)
+    def connect(self):
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.connect(self.socket_path)
+        return client
+    def flush_socket(self, sock):
         try:
-            client.connect(MPV_SOCKET)
-            client.send(QUIT_CMD)
-            client.close()
+            fcntl.fcntl(sock, fcntl.F_SETFL, os.O_NONBLOCK)
+            sock.recv(4096)
+            fcntl.fcntl(sock, fcntl.F_SETFL, 0)
         except socket.error as e:
-            return "already stopped or error while sending quit: %s" % e
+            if e != errno.EAGAIN or e != errno.EWOULDBLOCK:
+                return "Connection failed while retrieving current song: %s" % e
+    def media_title(self):
+        if os.path.exists(self.socket_path):
+            try:
+                client = self.connect()
+                self.flush_socket(client) # flush events
+                client.send(MEDIA_TITLE)
+                f = client.makefile("r")
+                line = f.readline()
+            except socket.error as e:
+                return "Connection failed while retrieving current song: %s" % e
+            try:
+                response = json.loads(line)
+                title = response.get("data", "N/A")
+                return "current song: %s" % title
+            except ValueError as e:
+                return "failed to parse response of mpv: %s" % e
+        else:
+            return "no mpv running"
+    def stop(self):
+        if self.child != None:
+            self.child.kill()
+            self.child.wait()
+            self.child = None
+        if os.path.exists(self.socket_path):
+            try:
+                client = self.connect()
+                client.send(QUIT_CMD)
+                client.close()
+            except socket.error as e:
+                return "already stopped or error while sending quit: %s" % e
+            finally:
+                try:
+                    os.remove(self.socket_path)
+                except OSError:
+                    pass
+        else:
+            return "no mpv running"
+
+mpv_cider = Mpv("cider.hq.c3d2.de")
+
+@botcmd
+@ignore_msg_from_self
+def news(self, mess, args):
+  """
+  pentanews bot handling
+  """
+  scriptpath = os.path.dirname( os.path.realpath(__file__) )
+  newsDatabase = scriptpath + "/pentanewsdb/"
+
+  def getNews(month):
+    if month == 0:
+      return False
+    newsfile = newsDatabase + month + '.news'
+    if not os.path.isfile(newsfile):
+      return "month not found\n"
+    f = open(newsfile, 'r')
+    news = f.read()
+    return news
+
+  def putNews(news):
+    thismonth = datetime.date.today().strftime('%Y-%m')
+    newsfile = newsDatabase + thismonth + '.news'
+    try:
+      f = open(newsfile, 'a')
+      f.write(news)
+      f.close()
+      return "news are written"
+    except (OSError, IOError) as e:
+      return "Upps: " + e
+
+
+  args = args.split(" ")
+  if args[0].upper() == 'HELP':
+    return "Usage: write '+news GET' or '+news' to get the news of the actual month. Write '+news GET 2017-03' to get a specific month. Or write '+news PUT https://hotsh.it thats hot shit!!' to add a news to the database"
+
+  if args[0].upper() == 'GET' or args[0] == '':
+    if len(args) > 1:
+      month = args[1]
+      if len(args[1]) == 7:
+        return( getNews(month) )
+      else:
+        return 'choose a month with a string link: GET 2017-01'
     else:
-        return "no mpv running"
+        thismonth = datetime.date.today().strftime('%Y-%m')
+        return "news of the month: \n" + getNews(thismonth)
 
-def playback(uri):
-    stop_playback()
-    subprocess.Popen(["mpv", "--ao", "pulse:"+CIDER, "--no-config", "--input-unix-socket="+MPV_SOCKET, "--", uri])
+  if args[0].upper() == 'PUT':
+    if len(args) > 1:
+      charlimit = 2048
+      news = str( " ".join( args[1:][0:charlimit] ))
+      news = news.strip("\n") + "\n"
+      news = datetime.date.today().strftime('%d.%m.%Y') + ": " + news
+      if len(news) > 0:
+        return putNews(news)
 
-if __name__ == "__main__":
-    playback("http://soundcloud.com/oliverschories/oliver-koletzki-b2b-oliver-schories-pleinvrees-utrecht-20-02-2015")
-    import time
-    time.sleep(10)
-    stop_playback()
+
 
 
 @botcmd
 @ignore_msg_from_self
 def cider_play(self, mess, args):
-    return playback(args.strip())
+    return mpv_cider.play(args.strip())
 
 @botcmd
 @ignore_msg_from_self
 def cider_stop(self, mess, args):
-    return stop_playback()
+    return mpv_cider.stop()
 
-### ### ###
-
-### ### ###
-
-MPV_SOCKET_Z = "/tmp/mpvsocket_zaubert"
-ZAUBERT = "zaubert.hq.c3d2.de"
-IS_PYTHON2_Z = sys.version_info < (3, 0)
-if IS_PYTHON2_Z:
-    QUIT_CMD_Z = '{"command": ["quit"]}\n'
-else:
-    QUIT_CMD_Z = b'{"command": ["quit"]}\n'
-
-def stop_playback_z():
-    os.popen('pkill mpv')
-    if os.path.exists(MPV_SOCKET_Z):
-        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        try:
-            client.connect(MPV_SOCKET_Z)
-            client.send(QUIT_CMD_Z)
-            client.close()
-        except socket.error as e:
-            return "already stopped or error while sending quit: %s" % e
-    else:
-        return "no mpv running"
-
-def playback_z(uri):
-    stop_playback_z()
-    subprocess.Popen(["mpv", "--ao", "pulse:"+ZAUBERT, "--no-config", "--input-unix-socket="+MPV_SOCKET_Z, "--", uri])
+mpv_zaubert = Mpv("zaubert.hq.c3d2.de")
 
 @botcmd
 @ignore_msg_from_self
 def zaubert_play(self, mess, args):
-    return playback_z(args.strip())
+    return mpv_zaubert.play(args.strip())
 
 @botcmd
 @ignore_msg_from_self
 def zaubert_stop(self, mess, args):
-    return stop_playback_z()
+    return mpv_zaubert.stop()
+
+### ### ###
+
+@botcmd
+@ignore_msg_from_self
+def cider_playlist(self, message, args):
+    """
+    show current bot mpv playlist
+    """
+    return mpv_cider.media_title()
+
+@botcmd
+@ignore_msg_from_self
+def zaubert_playlist(self, message, args):
+    """
+    show current bot mpv playlist
+    """
+    return mpv_zaubert.media_title()
 
 ### ### ###
 
@@ -121,7 +213,7 @@ def playlist(self, mess, args):
 ### ### ###
 
 def format_help(fun):
-    fun.__doc__ = fun.__doc__.format(**feed_help) #** dict entpacken, * listen entpacken 
+    fun.__doc__ = fun.__doc__.format(**feed_help) #** dict entpacken, * listen entpacken
     return fun
 
 def _stroflatlog_de(latitude, longitude):
@@ -232,7 +324,7 @@ def ping6flatbert(self, mess, args):
     """
     Zeige Informationen ueber den Server - flatbert.hq.c3d2.de
     """
-    ping6flatbert = ''  
+    ping6flatbert = ''
     try:
         ping6flatbert += os.popen('/sbin/ping6 -c4 flatbert.hq.c3d2.de  | /usr/bin/tail -2').read()
     except:
@@ -323,7 +415,7 @@ def flatbert(self, mess, args):
     """
     Server Test
     """
-    flatbert = ''   
+    flatbert = ''
     try:
         flatbert += os.popen('/home/freebot/pentabot/shell/hq-check-flatbert.sh').read()
     except:
@@ -448,7 +540,7 @@ def fortune(self, mess, args):
 def cowgedichte(self, mess, args):
     """
     cowGedichte Cookie for you
-    
+
     A Cookie you can trust and accept.
     Just run cowgedichte
     """
@@ -474,9 +566,6 @@ def cowfortune(self, mess, args):
     except:
         cowfortune += 'Your cowfortune unforseeable'
     return ('Your Cookie reads:\n' + cowfortune)
-
-
-
 
 @botcmd
 @ignore_msg_from_self
@@ -517,7 +606,7 @@ def last(self, mess, args):
         message = 'Bitte rufe \"help last\" fuer moegliche Optionen auf!'
     return message
 
-@format_help  
+@format_help
 @botcmd
 @ignore_msg_from_self
 def mensa(self, mess, args):
@@ -592,7 +681,7 @@ def elbe(self, mess, args):
 @ignore_msg_from_self
 def abfahrt(self, mess, args):
     """
-    Abfahrtsmonitor
+    Abfahrtsmonitor Lingerstadt
     Benutze: abfahrt <Haltestellenname>
     """
     args = args.strip().split(' ')
@@ -649,6 +738,23 @@ def abfahrt(self, mess, args):
 
     return abfahrt
 
+
+def hqStatus(flag):
+  if(flag == "off" or flag == "on"):
+      f = open("hq-state.switch","w")
+      f.seek(0)
+      f.write(flag)
+      f.close()
+
+  if(flag == 'get'):
+    f = open('hq-state.switch','r')
+    f.seek(0)
+    message = "current HQ status: " + f.read(10)
+    f.close()
+    return message
+
+
+
 @botcmd
 @ignore_msg_from_self
 def hq(self, mess, args):
@@ -673,7 +779,8 @@ def hq(self, mess, args):
 #    sensors_help_msg = "       pi         Zeigt die Temperatur von " + content.get("sensors").get("temperature")[0].get("name") + "\n"
     help_msg = "Benutze: hq <option> (<option>)\n"
     help_msg += "Optionen:\n"
-    help_msg += "    status          Zeigt dir den Status (offen/zu) vom HQ\n"
+#    help_msg += "    status          Zeigt dir den Status (offen/zu) vom HQ\n"
+    help_msg += "    status          Zeigt den Status des HQ an (+hq status | +hq status on | +hq status off)\n"
     help_msg += "    coords          Zeigt dir die Koordinaten des HQ\n"
     help_msg += "    sensors         Zeigt die Werte der Sensoren im HQ\n"
 #    help_msg += sensors_help_msg
@@ -687,13 +794,24 @@ def hq(self, mess, args):
 
     if not args[0]:
         message = help_msg
+
+#    elif args[0] == "status_TEMP_DEAKTIVERT_BIS_SCHALTER_WIEDER_GEHT":
+#                     die auskommentiert help msg wieder reinnehmen
+##        message += content.get("state").get("message")
+##        message += "   " + "UTC/GMT+1" + "   "  + str(datetime.datetime.now())
+##        message += content.get("state").get("message") + "            " + "LASTCHANGE" + "   "  +str(content.get("state").get("lastchange"))
+#        message += content.get("state").get("message") + "            " + "LASTCHANGE" + "   "  +datetime.datetime.fromtimestamp(int(content.get("state").get("lastchange"))).strftime('%Y-%m-%d %H:%M:%S')
     elif args[0] == "status":
-#        message += content.get("state").get("message")
-#        message += "   " + "UTC/GMT+1" + "   "  + str(datetime.datetime.now())
-#        message += content.get("state").get("message") + "            " + "LASTCHANGE" + "   "  +str(content.get("state").get("lastchange"))
-         message += content.get("state").get("message") + "            " + "LASTCHANGE" + "   "  +datetime.datetime.fromtimestamp(int(content.get("state").get("lastchange"))).strftime('%Y-%m-%d %H:%M:%S')
+       if len(args) == 2:
+          if args[1] == "on":
+            hqStatus("on")
+          if args[1] == "off":
+            hqStatus("off")
+       message += hqStatus("get")
+
     elif args[0] == "coords":
-        message += "Das HQ findest du auf %s ."%(_stroflatlog_de(content.get("location").get("lat") , content.get("location").get("lon")))
+        message += "Das HQ findest du auf %s "%(_stroflatlog_de(content.get("location").get("lat") , content.get("location").get("lon")))
+	message += "oder hier: https://www.openstreetmap.org/way/372193022"
     elif args[0] == "web":
         message += "Der Chaos Computer Club Dresden (C3D2) ist im Web erreichbar unter " + content.get("url") + " ."
     elif args[0] == "sensors":
@@ -872,7 +990,7 @@ def serverportupgradelog(self, mess, args):
 
 @botcmd
 @ignore_msg_from_self
-def lebst_du(self, mess, args):  
+def lebst_du(self, mess, args):
     """
     :D
     """
@@ -885,6 +1003,19 @@ def lebst_du(self, mess, args):
 
 @botcmd
 @ignore_msg_from_self
+def pentabot(self, mess, args):
+    """
+    :D
+    """
+    pentabot = ''
+    try:
+        pentabot += os.popen('echo "Früher hatte ich Elan. Heute habe ich Wlan. Ist auch okay!"').read()
+    except:
+        pentabot += 'Sorry Dude'
+    return ('Info:\n' + pentabot)
+
+@botcmd
+@ignore_msg_from_self
 def cloudstorage(self, mess, args):
     """
     :D
@@ -892,10 +1023,10 @@ def cloudstorage(self, mess, args):
     cloudstorage = ''
     try:
         cloudstorage += os.popen("/home/pentabot/shell/df.sh").read()
-         
+
     except:
         cloudstorage += 'Sorry Dude'
-    return ('Ihnen steht noch folgender Speicherplatz im Utha NSA-Rechenzentrum zur Verfuegung\n' + cloudstorage)
+    return ('Ihnen steht noch folgender Speicherplatz in der Uga Uga NSA Cloud zur Verfuegung\n' + cloudstorage)
 
 ### ### ###
 
@@ -911,6 +1042,23 @@ def test_spaceapi(self, mess, args):
     except:
         test_spaceapi += 'Sorry Dude'
     return ('Info:\n' + test_spaceapi)
+
+
+### ### ### ### ### ### ### ### ###
+
+@botcmd
+@ignore_msg_from_self
+def check_wetu(self, mess, args):
+    """
+    Wetu Server Test
+    """
+    check_wetu = ''
+    try:
+        check_wetu += os.popen('/home/pentabot/shell/check_wetu.sh').read()
+        check_wetu += os.popen('/bin/cat /tmp/pentabot_check_wetu2.log').read()
+    except:
+        check_wetu += 'Sorry Dude'
+    return ('' + check_wetu)
 
 ### ### ### PLITC ### ### ###
 # EOF
