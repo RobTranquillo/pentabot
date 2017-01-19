@@ -148,7 +148,7 @@ def news(self, mess, args):
       news = str( " ".join( args[1:][0:charlimit] ))
       news = news.strip("\n") + "\n"
       news = datetime.date.today().strftime('%d.%m.%Y') + ": " + news
-      if len(news) > 0:
+      if len(news) > 4:
         return putNews(news)
 
 
@@ -811,7 +811,7 @@ def hq(self, mess, args):
 
     elif args[0] == "coords":
         message += "Das HQ findest du auf %s "%(_stroflatlog_de(content.get("location").get("lat") , content.get("location").get("lon")))
-	message += "oder hier: https://www.openstreetmap.org/way/372193022"
+        message += "oder hier: https://www.openstreetmap.org/way/372193022"
     elif args[0] == "web":
         message += "Der Chaos Computer Club Dresden (C3D2) ist im Web erreichbar unter " + content.get("url") + " ."
     elif args[0] == "sensors":
