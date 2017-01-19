@@ -6,6 +6,7 @@
 - python-xmpp
 - python-feedparser
 - python-requests
+- python-dnspython
 
 a stylish xmpp-based bot serving pentamedia with your data and pentamedia data for you.
 
