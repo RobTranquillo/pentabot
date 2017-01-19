@@ -5,6 +5,7 @@
 - python-jabberbot
 - python-xmpp
 - python-feedparser
+- python-requests
 
 a stylish xmpp-based bot serving pentamedia with your data and pentamedia data for you.
 
