@@ -80,6 +80,9 @@ if __name__ == "__main__":
         lChan = config.get("muc", "chan").split(',')
         lNick = config.get("muc", "name").split(',')
         for _int in range(0, len(lChan)):
-           pentabot.join_room(lChan[_int], lNick[0] if len(lNick) == 1 else lNick[_int])
+            if hasattr(pentabot, "muc_join_room"):
+                pentabot.muc_join_room(lChan[_int], lNick[0] if len(lNick) == 1 else lNick[_int])
+            else: # old version
+                pentabot.join_room(lChan[_int], lNick[0] if len(lNick) == 1 else lNick[_int])
         pentabot.serve_forever()
 
