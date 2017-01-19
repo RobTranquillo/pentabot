@@ -1,9 +1,10 @@
-pentabot
+# Pentabot
 
-Requirements:
+## Requirements:
 
-python-jabberbot (requires python-xmpp)
-python-feedparser
+- python-jabberbot
+- python-xmpp
+- python-feedparser
 
 a stylish xmpp-based bot serving pentamedia with your data and pentamedia data for you.
 
