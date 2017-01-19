@@ -8,6 +8,17 @@
 - python-requests
 - python-dnspython
 
+## Example credentials
+
+```
+# .pentabot.login
+[pentaBotSecret]
+username=<jabberid>
+password=<password>
+resource=<ressourcename>
+debug=True
+```
+
 a stylish xmpp-based bot serving pentamedia with your data and pentamedia data for you.
 
 First of all, it shall be able to receive news for our monthly pentaradio show (supposed format: "!add <url> <your text> <#yourtag>").
