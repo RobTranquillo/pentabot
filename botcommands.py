@@ -654,6 +654,8 @@ def abfahrt(self, mess, args):
         if len(args) == 1:
             laufzeit = config.get("abfahrt", "laufzeit")
             haltestelle = args[0]
+            if len(haltestelle) < 3:
+              haltestelle = config.get("abfahrt", "default_station")
         else:
             if args[-1].isdigit():
                 laufzeit = args[-1]
@@ -677,6 +679,7 @@ def abfahrt(self, mess, args):
         data = requests.get(url=full_url)
 
         if json.loads(data.content):
+            abfahrt += "\nHaltestelle: " + haltestelle + full_url
             abfahrt += "\n%6s %-19s %7s\n" % ("Linie", "Richtung", "Abfahrt")
 
             for line in json.loads(data.content):
