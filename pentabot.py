@@ -23,9 +23,9 @@ config.read([configfile, configfile])
 
 # feed dict
 feed_help= {}
-feed_help['lastrss']= "\n".join(dict(config.items('RSS')).keys())
-feed_help['lastrssmensa']= "\n".join(dict(config.items('RSSMENSA')).keys())
-feed_help['lastrssgithub']= "\n".join(dict(config.items('RSSGITHUB')).keys())
+feed_help['lastrss']= ", ".join(dict(config.items('RSS')).keys())
+feed_help['lastrssmensa']= ", ".join(dict(config.items('RSSMENSA')).keys())
+feed_help['lastrssgithub']= ", ".join(dict(config.items('RSSGITHUB')).keys())
 
 class pentaBot(JabberBot):
     """
