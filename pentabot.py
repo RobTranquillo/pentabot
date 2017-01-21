@@ -31,9 +31,9 @@ class pentaBot(JabberBot):
     """
     pentabot
     It shall server you at your fingertips. And you shall serve him. With News for pentaradio.
-    For more info: http://github.com/koeart/pentabot
+    For more info: https://github.com/c3d2/pentabot
     koeart <at remove this> zwoelfelf <this as well> <net>
-    
+
     Don't Abuse Me! Channel for Testing: bot@chat.c3d2.de
     """
 
