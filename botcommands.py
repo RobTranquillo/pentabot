@@ -102,7 +102,7 @@ mpv_cider = Mpv("cider.hq.c3d2.de")
 @ignore_msg_from_self
 def news(self, mess, args):
   """
-  insert/read pentanews for the upcomming pentaradio show
+  insert/read pentanews for the upcoming pentaradio show
   """
   scriptpath = os.path.dirname( os.path.realpath(__file__) )
   newsDatabase = scriptpath + "/pentanewsdb/"
