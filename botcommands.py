@@ -96,11 +96,13 @@ class Mpv:
 
 mpv_cider = Mpv("cider.hq.c3d2.de")
 
+
+
 @botcmd
 @ignore_msg_from_self
 def news(self, mess, args):
   """
-  pentanews bot handling
+  insert/read pentanews for the upcoming pentaradio show
   """
   scriptpath = os.path.dirname( os.path.realpath(__file__) )
   newsDatabase = scriptpath + "/pentanewsdb/"
@@ -151,8 +153,7 @@ def news(self, mess, args):
       if len(news) > 4:
         return putNews(news)
 
-
-
+### ### ###
 
 @botcmd
 @ignore_msg_from_self
@@ -164,20 +165,6 @@ def cider_play(self, mess, args):
 def cider_stop(self, mess, args):
     return mpv_cider.stop()
 
-mpv_zaubert = Mpv("zaubert.hq.c3d2.de")
-
-@botcmd
-@ignore_msg_from_self
-def zaubert_play(self, mess, args):
-    return mpv_zaubert.play(args.strip())
-
-@botcmd
-@ignore_msg_from_self
-def zaubert_stop(self, mess, args):
-    return mpv_zaubert.stop()
-
-### ### ###
-
 @botcmd
 @ignore_msg_from_self
 def cider_playlist(self, message, args):
@@ -185,14 +172,6 @@ def cider_playlist(self, message, args):
     show current bot mpv playlist
     """
     return mpv_cider.media_title()
-
-@botcmd
-@ignore_msg_from_self
-def zaubert_playlist(self, message, args):
-    """
-    show current bot mpv playlist
-    """
-    return mpv_zaubert.media_title()
 
 ### ### ###
 
@@ -225,30 +204,6 @@ def _stroflatlog_de(latitude, longitude):
     eastwest = ("östlicher","westlicher")[int(longitude < 0 )]
     ewshort = ("E", "W")[int(longitude<0)]
     return "%f %s Breite und %f %s Länge { %f°%s %f°%s }" % (abs(latitude), southnorth, abs(longitude), eastwest, abs(latitude), snshort, abs(longitude), ewshort)
-
-@botcmd
-@ignore_msg_from_self
-def helloself(self, mess, args):
-    """
-    Hello Self, the botway
-    """
-    return 'Hello ' + str(self.jid)
-
-@botcmd
-@ignore_msg_from_self
-def helloworld(self, mess, args):
-    """
-    Hello World, the botway
-    """
-    return 'Hello World, the botway!'
-
-@botcmd
-@ignore_msg_from_self
-def echo(self, mess, args):
-    """
-    ein echo fuer die welt
-    """
-    return args
 
 @botcmd
 @ignore_msg_from_self
@@ -287,8 +242,7 @@ def whoami(self, mess, args):
     else:
         return mess.getFrom().getStripped()
 
-
-
+### ### ###
 
 @botcmd
 @ignore_msg_from_self
@@ -398,19 +352,6 @@ def ping6knot(self, mess, args):
 
 @botcmd
 @ignore_msg_from_self
-def hq_daniel(self, mess, args):
-    """
-    User availability
-    """
-    hq_daniel = ''
-    try:
-        hq_daniel += os.popen('/home/freebot/pentabot/shell/hq-check-daniel.sh').read()
-    except:
-        hq_daniel += 'Sorry Dude'
-    return ('Info:\n' + hq_daniel)
-
-@botcmd
-@ignore_msg_from_self
 def flatbert(self, mess, args):
     """
     Server Test
@@ -422,18 +363,40 @@ def flatbert(self, mess, args):
         flatbert += 'Sorry Dude'
     return ('Info:\n' + flatbert)
 
+### ### ###
+
 @botcmd
 @ignore_msg_from_self
-def hq_vater(self, mess, args):
+def test_spaceapi(self, mess, args):
     """
-    User availability
+    SpaceAPI WebServer Test
     """
-    hq_vater = ''
+    test_spaceapi = ''
     try:
-        hq_vater += os.popen('/home/freebot/pentabot/shell/hq-check-vater.sh').read()
+        test_spaceapi += os.popen("/usr/bin/curl -m3 -I http://www.hq.c3d2.de/spaceapi.json 2>&1 | grep 'HTTP/'").read()
     except:
-        hq_vater += 'Sorry Dude'
-    return ('Info:\n' + hq_vater)
+        test_spaceapi += 'Sorry Dude'
+    return ('Info:\n' + test_spaceapi)
+
+
+### ### ### ### ### ### ### ### ###
+
+@botcmd
+@ignore_msg_from_self
+def check_wetu(self, mess, args):
+    """
+    Wetu Server Test
+    """
+    check_wetu = ''
+    try:
+        check_wetu += os.popen('/home/pentabot/shell/check_wetu.sh').read()
+        check_wetu += os.popen('/bin/cat /tmp/pentabot_check_wetu2.log').read()
+    except:
+        check_wetu += 'Sorry Dude'
+    return ('' + check_wetu)
+
+
+### ### ###
 
 @botcmd
 @ignore_msg_from_self
@@ -461,6 +424,18 @@ def zufall100(self, mess, args):
         zufall100 += 'Sorry Dude'
     return ('Zufall 1-100 sagt:\n' + zufall100)
 
+### ### ###
+
+@botcmd
+@ignore_msg_from_self
+def dn42(self, mess, args):
+    """
+    dn42 address space
+    """
+    return 'http://172.22.99.76:8000/index.html'
+
+### ### ###
+
 @botcmd
 @ignore_msg_from_self
 def gedichte(self, mess, args):
@@ -472,7 +447,8 @@ def gedichte(self, mess, args):
     """
     gedichte = ''
     try:
-        gedichte += os.popen('/basejail/usr/games/fortune /usr/share/games/fortune/gedichte').read()
+        #gedichte += os.popen('/basejail/usr/games/fortune /usr/share/games/fortune/gedichte').read()
+        gedichte += os.popen('/usr/share/zsh/functions/Completion/Unix/_fortune /usr/share/games/fortune/gedichte').read()
     except:
         gedichte += 'Your gedichte unforseeable'
     return ('Your Cookie reads:\n' + gedichte)
@@ -492,32 +468,6 @@ def weihnachtsgedichte(self, mess, args):
     except:
         weihnachtsgedichte += 'Your weihnachtsgedichte unforseeable'
     return ('Your Cookie reads:\n' + weihnachtsgedichte)
-
-
-@botcmd
-@ignore_msg_from_self
-def dn42(self, mess, args):
-    """
-    dn42 address space
-    """
-    return 'http://172.22.99.76:8000/index.html'
-
-
-@botcmd
-@ignore_msg_from_self
-def weihnachtsmukke(self, mess, args):
-    """
-    Weihnachten in da House
-    """
-    return 'http://www.youtube.com/watch?v=F4kFVhew35g'
-
-@botcmd
-@ignore_msg_from_self
-def mahlzeit(self, mess, args):
-    """
-    Cityherberge Dresden - Speisekarte
-    """
-    return 'http://www.cityherberge.de/wp-content/uploads/speiseplan/speisenkarte.pdf'
 
 @botcmd
 @ignore_msg_from_self
@@ -567,6 +517,8 @@ def cowfortune(self, mess, args):
         cowfortune += 'Your cowfortune unforseeable'
     return ('Your Cookie reads:\n' + cowfortune)
 
+### ### ###
+
 @botcmd
 @ignore_msg_from_self
 def ddate(self, mess, args):
@@ -583,14 +535,16 @@ def ddate(self, mess, args):
         ddate = 'You are not using correctly!\n Just enter ddate or append day month year'
     return ddate
 
+### ### ###
+
 @format_help
 @botcmd
 @ignore_msg_from_self
 def last(self, mess, args):
     """
-    Gibt die letzten News zu PentaCast, PentaRadio und PentaMusic wieder
-    Moegliche Eingaben:
-    {lastrss}
+    Zeigt neuste Meldungen verschiedener Portale an.
+    Benutzung: +last <Quelle> [Anzahl]
+    Quellen:  {lastrss}
     """
     args = args.strip().split(' ')
     if args[0] in dict(config.items('RSS')).keys():
@@ -605,6 +559,8 @@ def last(self, mess, args):
     else:
         message = 'Bitte rufe \"help last\" fuer moegliche Optionen auf!'
     return message
+
+### ### ###
 
 @format_help
 @botcmd
@@ -633,6 +589,8 @@ def mensa(self, mess, args):
         message = 'Bitte rufe \"help mensa\" fuer moegliche Optionen auf!'
     return message
 
+### ### ###
+
 @format_help
 @botcmd
 @ignore_msg_from_self
@@ -656,6 +614,8 @@ def github(self, mess, args):
         message = 'Bitte rufe \"help github\" fuer moegliche Optionen auf!'
     return message
 
+### ### ###
+
 @botcmd
 @ignore_msg_from_self
 def elbe(self, mess, args):
@@ -677,11 +637,13 @@ def elbe(self, mess, args):
     message += 'Pegelstand: %d cm' % pegel
     return message
 
+### ### ###
+
 @botcmd
 @ignore_msg_from_self
 def abfahrt(self, mess, args):
     """
-    Abfahrtsmonitor Lingerstadt
+    DVB Abfahrtsmonitor
     Benutze: abfahrt <Haltestellenname>
     """
     args = args.strip().split(' ')
@@ -692,6 +654,8 @@ def abfahrt(self, mess, args):
         if len(args) == 1:
             laufzeit = config.get("abfahrt", "laufzeit")
             haltestelle = args[0]
+            if len(haltestelle) < 3:
+              haltestelle = config.get("abfahrt", "default_station")
         else:
             if args[-1].isdigit():
                 laufzeit = args[-1]
@@ -715,6 +679,7 @@ def abfahrt(self, mess, args):
         data = requests.get(url=full_url)
 
         if json.loads(data.content):
+            abfahrt += "\nHaltestelle: " + haltestelle + full_url
             abfahrt += "\n%6s %-19s %7s\n" % ("Linie", "Richtung", "Abfahrt")
 
             for line in json.loads(data.content):
@@ -738,6 +703,7 @@ def abfahrt(self, mess, args):
 
     return abfahrt
 
+### ### ###
 
 def hqStatus(flag):
   if(flag == "off" or flag == "on"):
@@ -861,159 +827,6 @@ def hq(self, mess, args):
         message += "Probier es noch mal mit einer der folgenden Optionen: status, sensors, coords, contact, web oder feeds."
     return message
 
-### ### ### PLITC ### ### ###
-
-@botcmd
-@ignore_msg_from_self
-def serverprozesse(self, mess, args):
-    """
-    Zeige Informationen ueber den Server
-    """
-    serverprozesse = ''
-    try:
-        serverprozesse += os.popen('/bin/ps -vwc').read()
-    except:
-        serverprozesse += 'Sorry Dude'
-    return ('Info:\n' + serverprozesse)
-
-@botcmd
-@ignore_msg_from_self
-def serverlastlogin(self, mess, args):
-    """
-    Zeige Informationen ueber den Server
-    """
-    serverlastlogin = ''
-    try:
-        serverlastlogin += os.popen("/usr/bin/last -n 3 | /usr/bin/awk '{print $1,$2,$4,$5,$6,$7,$8,$9,$10}'").read()
-    except:
-        serverlastlogin += 'Sorry Dude'
-    return ('Info:\n' + serverlastlogin)
-
-@botcmd
-@ignore_msg_from_self
-def serversshauth(self, mess, args):
-    """
-    Zeige Informationen ueber den Server
-    """
-    serversshauth = ''
-    try:
-        serversshauth += os.popen('/usr/bin/grep "error" /var/log/auth.log').read()
-    except:
-        serversshauth += 'Sorry Dude'
-    return ('Info:\n' + serversshauth)
-
-@botcmd
-@ignore_msg_from_self
-def servernetstat(self, mess, args):
-    """
-    Zeige Informationen ueber den Server
-    """
-    servernetstat = ''
-    try:
-        #servernetstat += os.popen("netstat -f inet6 | /usr/bin/awk '{print $1,$2,$3,$4,$6}'").read()
-        servernetstat += os.popen("netstat -rni").read()
-    except:
-        servernetstat += 'Sorry Dude'
-    return ('Info:\n' + servernetstat)
-
-@botcmd
-@ignore_msg_from_self
-def serversockstat(self, mess, args):
-    """
-    Zeige Informationen ueber den Server
-    """
-    serversockstat = ''
-    try:
-        serversockstat += os.popen("sockstat -6 | /usr/bin/awk '{print $1,$2,$5}'").read()
-    except:
-        serversockstat += 'Sorry Dude'
-    return ('Info:\n' + serversockstat)
-
-@botcmd
-@ignore_msg_from_self
-def serverportupdate(self, mess, args):
-    """
-    Server - Port Update! ... take a deep breath ...
-    """
-    serverportupdate = ''
-    try:
-        serverportupdate += os.popen('echo "... take a deep breath ..."').read()
-        serverportupdate += os.popen('/usr/sbin/pkg_version -l "<" > /home/freebot/pentabot/shell/jail_update.log 2>&1').read()
-        serverportupdate += os.popen('/bin/cat /home/freebot/pentabot/shell/jail_update.log').read()
-    except:
-        serverportupdate += 'Sorry Dude'
-    return ('Info:\n' + serverportupdate)
-
-@botcmd
-@ignore_msg_from_self
-def serverpkgaudit(self, mess, args):
-    """
-    Server - PKG Audit -F! ... take a deep breath ...
-    """
-    serverpkgaudit = ''
-    try:
-        serverpkgaudit += os.popen('echo "... take a deep breath ..."').read()
-        serverpkgaudit += os.popen('/home/freebot/pentabot/shell/jail_pkg_audit.csh > /home/freebot/pentabot/shell/jail_pkg_audit.log 2>&1').read()
-        serverpkgaudit += os.popen('/bin/cat /home/freebot/pentabot/shell/jail_pkg_audit.log').read()
-    except:
-        serverpkgaudit += 'Sorry Dude'
-    return ('Info:\n' + serverpkgaudit)
-
-@botcmd
-@ignore_msg_from_self
-def serverportupgrade(self, mess, args):
-    """
-    Server - Port Upgrade! ... take a deep breath ...
-    """
-    serverportupgrade = ''
-    try:
-        serverportupgrade += os.popen('echo "... take a deep breath ..."').read()
-        serverportupgrade += os.popen('/home/freebot/pentabot/shell/jail_update.csh > /home/freebot/pentabot/shell/jail_upgrade.log 2>&1').read()
-        serverportupgrade += os.popen('/usr/bin/tail -n15 /home/freebot/pentabot/shell/jail_upgrade.log').read()
-    except:
-        serverportupgrade += 'Sorry Dude'
-    return ('Info:\n' + serverportupgrade)
-
-@botcmd
-@ignore_msg_from_self
-def serverportupgradelog(self, mess, args):
-    """
-    Server - Port Upgrade Log ... take a deep breath ...
-    """
-    serverportupgradelog = ''
-    try:
-        serverportupgradelog += os.popen('echo "... take a deep breath ..."').read()
-        serverportupgradelog += os.popen('/usr/bin/tail -n15 /home/freebot/pentabot/shell/jail_upgrade.log').read()
-    except:
-        serverportupgradelog += 'Sorry Dude'
-    return ('Info:\n' + serverportupgradelog)
-
-@botcmd
-@ignore_msg_from_self
-def lebst_du(self, mess, args):
-    """
-    :D
-    """
-    lebst_du = ''
-    try:
-        lebst_du += os.popen('echo "Ja, Schöpfer"').read()
-    except:
-        lebst_du += 'Sorry Dude'
-    return ('Info:\n' + lebst_du)
-
-@botcmd
-@ignore_msg_from_self
-def pentabot(self, mess, args):
-    """
-    :D
-    """
-    pentabot = ''
-    try:
-        pentabot += os.popen('echo "Früher hatte ich Elan. Heute habe ich Wlan. Ist auch okay!"').read()
-    except:
-        pentabot += 'Sorry Dude'
-    return ('Info:\n' + pentabot)
-
 @botcmd
 @ignore_msg_from_self
 def cloudstorage(self, mess, args):
@@ -1028,37 +841,18 @@ def cloudstorage(self, mess, args):
         cloudstorage += 'Sorry Dude'
     return ('Ihnen steht noch folgender Speicherplatz in der Uga Uga NSA Cloud zur Verfuegung\n' + cloudstorage)
 
-### ### ###
-
 @botcmd
 @ignore_msg_from_self
-def test_spaceapi(self, mess, args):
+def pentabot(self, mess, args):
     """
-    SpaceAPI WebServer Test
+    :D
     """
-    test_spaceapi = ''
+    pentabot = ''
     try:
-        test_spaceapi += os.popen("/usr/bin/curl -m3 -I http://www.hq.c3d2.de/spaceapi.json 2>&1 | grep 'HTTP/'").read()
+        pentabot += os.popen('echo "Früher hatte ich Elan. Heute habe ich Wlan. Ist auch okay!"').read()
     except:
-        test_spaceapi += 'Sorry Dude'
-    return ('Info:\n' + test_spaceapi)
+        pentabot += 'Sorry Dude'
+    return ('Info:\n' + pentabot)
 
 
-### ### ### ### ### ### ### ### ###
-
-@botcmd
-@ignore_msg_from_self
-def check_wetu(self, mess, args):
-    """
-    Wetu Server Test
-    """
-    check_wetu = ''
-    try:
-        check_wetu += os.popen('/home/pentabot/shell/check_wetu.sh').read()
-        check_wetu += os.popen('/bin/cat /tmp/pentabot_check_wetu2.log').read()
-    except:
-        check_wetu += 'Sorry Dude'
-    return ('' + check_wetu)
-
-### ### ### PLITC ### ### ###
 # EOF

@@ -23,7 +23,7 @@ a stylish xmpp-based bot serving pentamedia with your data and pentamedia data f
 
 First of all, it shall be able to receive news for our monthly pentaradio show (supposed format: "!add <url> <your text> <#yourtag>").
 
-Later features commands like "!latest #[radio|cast|music]" could serve you with the latest links available.
+Later features commands like "+last #[radio|cast|music]" could serve you with the latest links available. Try "+help last" for more info.
 
 Comments (for registered users) could be added as well.
 

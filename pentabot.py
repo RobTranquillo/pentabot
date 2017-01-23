@@ -23,17 +23,17 @@ config.read([configfile, configfile])
 
 # feed dict
 feed_help= {}
-feed_help['lastrss']= "\n".join(dict(config.items('RSS')).keys())
-feed_help['lastrssmensa']= "\n".join(dict(config.items('RSSMENSA')).keys())
-feed_help['lastrssgithub']= "\n".join(dict(config.items('RSSGITHUB')).keys())
+feed_help['lastrss']= ", ".join(dict(config.items('RSS')).keys())
+feed_help['lastrssmensa']= ", ".join(dict(config.items('RSSMENSA')).keys())
+feed_help['lastrssgithub']= ", ".join(dict(config.items('RSSGITHUB')).keys())
 
 class pentaBot(JabberBot):
     """
     pentabot
     It shall server you at your fingertips. And you shall serve him. With News for pentaradio.
-    For more info: http://github.com/koeart/pentabot
+    For more info: https://github.com/c3d2/pentabot
     koeart <at remove this> zwoelfelf <this as well> <net>
-    
+
     Don't Abuse Me! Channel for Testing: bot@chat.c3d2.de
     """
 
