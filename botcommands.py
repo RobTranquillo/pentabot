@@ -733,47 +733,48 @@ def hq(self, mess, args):
     content = json.loads(data.content)
 
     message = ""
-    contact_help_msg = "        all         Zeigt dir alle Daten\n"
-    contact_help_msg += "        phone       Zeigt dir die Festnetz Nummer unter der wir erreichbar sind\n"
-    contact_help_msg += "        twitter     Zeigt dir das Voegelchen unter dem wir schreiben oder erreichbar sind\n"
-    contact_help_msg += "        jabber      Zeigt dir die den MUC unter der wir erreichbar sind\n"
-    contact_help_msg += "        irc         Zeigt dir wie du uns im IRC erreichen kannst\n"
-    contact_help_msg += "        ml          Zeigt dir auf welcher Mailingliste du uns erreichen kannst\n"
-    feeds_help_msg = "        blog         Zeigt dir die C3D2-Mews-Feed-URL an\n"
-    feeds_help_msg += "        wiki          Zeigt dir die C3D2-Wiki-Feed-URL an\n"
-    feeds_help_msg += "        calendar   Zeigt dir die C3D2-Kalender-Feed-URL an\n"
-#    sensors_help_msg = "       pi         Zeigt die Temperatur von " + content.get("sensors").get("temperature")[0].get("name") + "\n"
-    help_msg = "Benutze: hq <option> (<option>)\n"
-    help_msg += "Optionen:\n"
-#    help_msg += "    status          Zeigt dir den Status (offen/zu) vom HQ\n"
-    help_msg += "    status          Zeigt den Status des HQ an (+hq status | +hq status on | +hq status off)\n"
-    help_msg += "    coords          Zeigt dir die Koordinaten des HQ\n"
-    help_msg += "    sensors         Zeigt die Werte der Sensoren im HQ\n"
+    contact_help_msg =  "\n all      Zeigt dir alle Daten"
+    contact_help_msg += "\n phone    Zeigt dir die Festnetz Nummer unter der wir erreichbar sind"
+    contact_help_msg += "\n twitter  Zeigt dir das Voegelchen unter dem wir schreiben oder erreichbar sind"
+    contact_help_msg += "\n jabber   Zeigt dir die den MUC unter der wir erreichbar sind"
+    contact_help_msg += "\n irc      Zeigt dir wie du uns im IRC erreichen kannst"
+    contact_help_msg += "\n ml       Zeigt dir auf welcher Mailingliste du uns erreichen kannst"
+    feeds_help_msg =    "\n blog     Zeigt dir die C3D2-Mews-Feed-URL an"
+    feeds_help_msg +=   "\n wiki     Zeigt dir die C3D2-Wiki-Feed-URL an"
+    feeds_help_msg +=   "\n calendar Zeigt dir die C3D2-Kalender-Feed-URL an"
+#    sensors_help_msg = "\n pi       Zeigt die Temperatur von " + content.get("sensors").get("temperature")[0].get("name") + ""
+    help_msg = "Benutze: hq <option> (<option>)"
+    help_msg +=         "\nOptionen:"
+    help_msg +=         "\n status   Zeigt den Status des HQ an (+hq status | +hq status on | +hq status off)"
+    help_msg +=         "\n coords   Zeigt dir die Koordinaten des HQ"
+    help_msg +=         "\n sensors  Zeigt die Werte der Sensoren im HQ"
 #    help_msg += sensors_help_msg
-    help_msg += "    contact         Zeigt dir Kontakt Daten zum HQ\n"
+    help_msg +=         "\n contact  Zeigt dir Kontakt Daten zum HQ"
     help_msg += contact_help_msg
-    help_msg += "    web             Zeigt dir den Link zu unserer Webseite\n"
-    help_msg += "    feeds           Zeigt dir die Newsfeeds des C3D2\n"
+    help_msg +=         "\n web      Zeigt dir den Link zu unserer Webseite"
+    help_msg +=         "\n feeds    Zeigt dir die Newsfeeds des C3D2"
     help_msg += feeds_help_msg
-
+    
     args = args.strip().split(' ')
 
     if not args[0]:
         message = help_msg
 
-#    elif args[0] == "status_TEMP_DEAKTIVERT_BIS_SCHALTER_WIEDER_GEHT":
-#                     die auskommentiert help msg wieder reinnehmen
-##        message += content.get("state").get("message")
-##        message += "   " + "UTC/GMT+1" + "   "  + str(datetime.datetime.now())
-##        message += content.get("state").get("message") + "            " + "LASTCHANGE" + "   "  +str(content.get("state").get("lastchange"))
-#        message += content.get("state").get("message") + "            " + "LASTCHANGE" + "   "  +datetime.datetime.fromtimestamp(int(content.get("state").get("lastchange"))).strftime('%Y-%m-%d %H:%M:%S')
     elif args[0] == "status":
-       if len(args) == 2:
-          if args[1] == "on":
-            hqStatus("on")
-          if args[1] == "off":
-            hqStatus("off")
-       message += hqStatus("get")
+        message += content.get("state").get("message") + "\n" + "LASTCHANGE" + "   "  +datetime.datetime.fromtimestamp(int(content.get("state").get("lastchange"))).strftime('%Y-%m-%d %H:%M:%S')
+#        message += "\n"+content.get("state").get("message")
+#        message += "   " + "UTC/GMT+1" + "   "  + str(datetime.datetime.now())
+#        message += content.get("state").get("message") + "            " + "LASTCHANGE" + "   "  +str(content.get("state").get("lastchange"))
+
+## Ein simpler status report auf basis eines flags in ner Datei
+#    elif args[0] == "status":
+#        message += "" #nur ein leerzeile ausgeben, solange Astrobot den Schalterstaus  wiedergibt
+#       if len(args) == 2:
+#          if args[1] == "on":
+#            hqStatus("on")
+#          if args[1] == "off":
+#            hqStatus("off")
+#       message += hqStatus("get")
 
     elif args[0] == "coords":
         message += "Das HQ findest du auf %s "%(_stroflatlog_de(content.get("location").get("lat") , content.get("location").get("lon")))
